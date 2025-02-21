@@ -1,0 +1,7 @@
+# docker-compose.yml
+services:
+  tensorflow:
+    build: ./ml-docker
+    container_name: tensorflow
+    ports:
+      - 8888:8888
