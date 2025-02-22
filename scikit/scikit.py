@@ -11,7 +11,7 @@ greeting_to_label = {greeting: label for label, greeting in enumerate(greetings)
 df['Label'] = df['Greeting'].map(greeting_to_label)
 
 # Split data into features and labels
-X = df['Greeting'].values.reshape(-1, 1)  # Features (reshape for OneHotEncoder)
+X = df['Greeting'].values.reshape(-1, 1)  # type: ignore # Features (reshape for OneHotEncoder)
 y = df['Label'].values                     # Labels
 
 # One-hot encode the features
