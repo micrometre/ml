@@ -1,37 +1,44 @@
-import requests
+from langchain_community.llms import Ollama
+from crewai import Agent, Task, Crew, Process
 
-# Ollama API endpoint
-OLLAMA_API_URL = "http://192.168.1.131:11434/api/generate"
+#concept crewai uses AGENTS to accomplish TASKS, these agents can optionally use TOOLS
+#you define your AGENTS
+#you define your TASKS
+#you send them off to do what you have asked!
 
-def chat_with_ollama(prompt, model="llama3.1"):
-    """
-    Sends a prompt to the Ollama model and returns the response.
-    """
-    payload = {
-        "model": model,
-        "prompt": prompt,
-        "stream": False  # Set to True if you want streaming responses
-    }
-    
-    try:
-        response = requests.post(OLLAMA_API_URL, json=payload)
-        response.raise_for_status()  # Raise an error for bad status codes
-        return response.json()["response"]
-    except requests.exceptions.RequestException as e:
-        return f"Error communicating with Ollama: {e}"
+#define local llm
+ollama_openhermes = Ollama(model="llama3.2")
 
-def main():
-    print("Welcome to the Ollama AI Agent! Type 'exit' to quit.")
-    
-    while True:
-        user_input = input("You: ")
-        if user_input.lower() == "exit":
-            print("Goodbye!")
-            break
-        
-        # Get the AI's response
-        ai_response = chat_with_ollama(user_input)
-        print(f"AI: {ai_response}")
+#define the agent - note no tools so its only going to tell you what it knows
+researcher = Agent(
+    role='researcher',
+    goal='Uncoverer information about emerging cybersecurity vulnerabilities',
+    backstory='You are a Top CyberSecurity researcher tasked with finding detailed information about emerging Cybersecurity vulnerabilities.',
+    verbose=True,
+    allow_delegation=False,
+    llm=ollama_openhermes
+)
 
-if __name__ == "__main__":
-    main()
+#define the agent - note no tools so its only going to tell you what it knows
+writer = Agent(
+    role='A writer of a popular cybersecurity newsletter',
+    goal='Generate a detailed Cybersecurity newsletter',
+    backstory='You are a Top CyberSecurity writer known for writing detailed and engaging newsletters',
+    verbose=True,
+    allow_delegation=False,
+    llm=ollama_openhermes
+)
+
+#define the tasks
+task1 = Task(description='Investigate emerging cybersecurity vulnerabilities that have come out in the past few months', agent=researcher, expected_output='Text research')
+task2 = Task(description='Write a compelling and detailed newsletter about cybersecurity vulnerabilities emerging in the past few months, make sure each vulnerability recieves its own section the newsletter', agent=writer, expected_output='A refined finalized version of report in text format')
+
+#get working
+crew = Crew(
+    agents=[researcher,writer],
+    tasks=[task1,task2],
+    verbose=2, # type: ignore
+    #process=Process.sequential
+)
+
+result = crew.kickoff()
